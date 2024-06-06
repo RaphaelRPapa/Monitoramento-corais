@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classificação de Corais</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Classificação de Corais</h1>
+        <div class="upload-box">
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+            <label for="fileInput" class="upload-button">Escolher Arquivo</label>
+            <div class="image-container">
+                <img id="preview" src="" alt="Preview" class="image-preview" style="display:none;">
+            </div>
+            <button onclick="uploadFile()">Enviar</button>
+        </div>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        function uploadFile() {
+            const resultElement = document.getElementById('result');
+            resultElement.style.transition = 'opacity 0.5s';
+            resultElement.style.opacity = 0;
+
+            setTimeout(() => {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    resultElement.innerText = data.result;
+                    resultElement.style.color = data.result.includes("não") ? 'red' : 'green';
+                    resultElement.style.opacity = 1;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }, 500);
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
